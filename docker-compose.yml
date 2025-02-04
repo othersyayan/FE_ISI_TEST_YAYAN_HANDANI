@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: isitodo_postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password12345
+      POSTGRES_DB: isitodo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  nextjs:
+    build: .
+    container_name: isitodo_nextjs_app
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: "postgresql://postgres:password12345@postgres:5432/isitodo"
+      NEXTAUTH_SECRET: "your-secret-key"
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:

@@ -1,0 +1,61 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    user_id    String    @id @default(uuid())
+    name       String
+    email      String    @unique
+    password   String
+    role       Role
+    team_tasks Task[]    @relation(name: "lead_task")
+    lead_tasks Task[]    @relation(name: "team_task")
+    task_logs  TaskLog[]
+
+    @@map("user")
+}
+
+enum Role {
+    LEAD
+    TEAM
+}
+
+model Task {
+    task_id     String    @id @default(uuid())
+    title       String
+    description String?
+    status      Status    @default(NOT_STARTED)
+    lead_id     String?
+    lead        User?     @relation(name: "lead_task", fields: [lead_id], references: [user_id])
+    team_id     String?
+    team        User?     @relation(name: "team_task", fields: [team_id], references: [user_id])
+    created_at  DateTime  @default(now())
+    updated_at  DateTime  @updatedAt
+    logs        TaskLog[]
+
+    @@map("task")
+}
+
+enum Status {
+    NOT_STARTED
+    ON_PROGRESS
+    DONE
+    REJECT
+}
+
+model TaskLog {
+    task_log_id String   @id @default(uuid())
+    task_id     String
+    task        Task     @relation(fields: [task_id], references: [task_id])
+    user_id     String
+    user        User     @relation(fields: [user_id], references: [user_id])
+    action      String
+    timestamp   DateTime @default(now())
+
+    @@map("task_log")
+}
